@@ -24,12 +24,23 @@ Simulação interativa no navegador da malha de nível do Tanque T2 da Planta de
 | Constante de tempo $\tau$ | $431{,}52$ s | idem |
 | Tempo morto $\theta$ | $0$ s | idem |
 | Degrau de identificação | Degrau na Bomba 2 (`DegrauP` de 30% para 40%, `DegrauHz` de 17,6 Hz para 23,4 Hz), com a válvula FV-02 fixa. O script calcula $\Delta U$ = 7,692% (5,354 Hz) porque a média antes do degrau pega 3 amostras já em 40%. Nível de 15,71% para 75,65% | `scripts/identificacao_fopdt.py` |
-| Atuador | Bomba 2 por inversor (0 a 100% de comando, Hz = 0,585 × DegrauP) alimentando o tanque; válvula FV-02 na saída em abertura fixa | Bancada VTB SENAI e `docs/02_ETAPAS_07_A_10_SINTONIA_PID.md` |
+| Atuador | Bomba 2 por inversor (0 a 100% de comando, Hz = 0,585 × DegrauP) alimentando o tanque; saída por gravidade numa válvula manual em abertura fixa (o gêmeo a rotula FV-02; tag e abertura a confirmar) | Bancada VTB SENAI e `docs/02_ETAPAS_07_A_10_SINTONIA_PID.md` |
 | PI por IMC | $K_p = 0{,}3851$, $K_i = 0{,}000892$ s⁻¹, $K_d = 0$ ($\tau_{mf} = \tau/3$) | idem |
 | PID por AG (ITAE) | $K_p = 1{,}4994$, $K_i = 0{,}003475$ s⁻¹, $K_d = 0{,}0030$ s | idem |
 | Simulação de referência | degrau de setpoint de 0 para 50%, com anti-reset windup | `scripts/projeto_pid_comparativo.py` |
 
 Nota: no CSV, a partir das 19h58 de 01/10 (sequência que inclui o bloco 40), `DegrauP` sobe em passos de 10% (10, 20, 30, 40 e 50%) e `DegrauHz` acompanha uma a duas amostras depois, com Hz = 0,585 × DegrauP. Antes disso, `DegrauP` registra 3, 5, 8 e 11% com frequências que não seguem essa relação. As duas colunas são da Bomba 2, como diz `docs/01_ETAPAS_01_A_06_IDENTIFICACAO.md`. Com o degrau real de 10%, o ganho por unidade seria K ≈ 5,99 %/%; o produto K × $\Delta U$ e o R² não mudam. Em discussão com a equipe e o orientador; o gêmeo mantém os valores do PI.
+
+**Identificação revisada pela equipe** (relatório técnico de Modelagem e Identificação, revisão de novembro de 2026, mesmos 6 integrantes):
+- Janela `codepk` 10631 a 15050 (4.420 registros), degrau de 30% para 40% ($\Delta u$ = 10%), $y_0$ = 15,7083%.
+- Resultado: $K$ = 5,9945 %/% e $\tau$ = 432,52 s, com $\theta$ = 0, R² = 0,99966 e RMSE de 0,270%. AG, PSO, `curve_fit` e `least_squares` chegam aos mesmos valores.
+- Tempo morto físico de cerca de 1 s (inversor e nível reagem 1 s após o comando), desprezível perto de $\tau$.
+- Planta: bomba centrífuga por inversor com zona morta em $u_{dz}$ ≈ 21,6% (10% e 20% não enchem o tanque) e saída por gravidade (Torricelli) numa válvula manual.
+- Não linear: ganho local de cerca de 3,7 %/% com $u$ = 30% e 8,2 %/% com $u$ = 40%. O modelo é secante e só vale para $u$ entre 30% e 40% (nível de 15,7% a 75,5%).
+- Escala do inversor na janela: cerca de 0,586 Hz por ponto percentual, com 1 s de latência. Em 24/09 a bancada estava em outra configuração (`DegrauP` = 11 com 23,4 Hz).
+- Depois da janela (`codepk` 15051 a 16528, $u$ = 50%): trecho excluído por saltos anômalos; possível teto físico (ladrão), não confirmado.
+
+Consequência para o gêmeo: o modo oráculo continua com $K$ = 7,7909 %/% para a paridade com o script do PI. Trocar o modo físico para o modelo revisado ($K$ = 5,9945 %/%, $u_0$ = 30%) exige refazer a sintonia do IMC e do AG e depende da decisão da equipe e do orientador.
 
 Métricas que a simulação nova precisa reproduzir (tolerância de 1%, modo oráculo, $dt$ = 0,5 s, 1200 s):
 
