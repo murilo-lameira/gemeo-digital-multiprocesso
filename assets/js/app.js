@@ -49,7 +49,7 @@ function ganhosAzul() {
 }
 
 function registrarHistorico() {
-  hist.registrar(sis, estado.manual, ganhosAzul());
+  hist.registrar(sis, estado.manual, ganhosAzul(), estado.ganhosAg, estado.origemAg === 'aovivo');
 }
 
 // Buffers do gráfico, alocados uma vez. A janela desliza com copyWithin.

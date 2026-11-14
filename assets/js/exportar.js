@@ -18,6 +18,10 @@ export const COLUNAS = [
   'Kp_azul',
   'Ki_azul',
   'Kd_azul',
+  'controlador_laranja',
+  'Kp_laranja',
+  'Ki_laranja',
+  'Kd_laranja',
 ];
 
 // 4 horas simuladas a 0,5 s.
@@ -25,6 +29,7 @@ export const CAPACIDADE_PADRAO = 28800;
 
 const NC = COLUNAS.length;
 const COL_CONTROLADOR = 10;
+const COL_CONTROLADOR_AG = 14;
 
 // O Excel em pt-BR só lê os acentos de um CSV UTF-8 com BOM.
 export const BOM = '﻿';
@@ -37,8 +42,9 @@ export function criarHistorico(capacidade = CAPACIDADE_PADRAO) {
   let contagem = 0;
 
   // sis: sistema de malhas.js; manual: malha azul em modo manual;
-  // g: ganhos em uso na malha azul ({Kp, Ki, Kd}).
-  function registrar(sis, manual, g) {
+  // g: ganhos em uso na malha azul ({Kp, Ki, Kd}); gAg: ganhos em uso na malha
+  // laranja; aoVivo: a laranja usa os ganhos do AG ao vivo (senão, os do PI).
+  function registrar(sis, manual, g, gAg, aoVivo) {
     let linha;
     if (contagem < capacidade) {
       linha = inicio + contagem;
@@ -66,6 +72,10 @@ export function criarHistorico(capacidade = CAPACIDADE_PADRAO) {
     dados[o + 11] = g.Kp;
     dados[o + 12] = g.Ki;
     dados[o + 13] = g.Kd;
+    dados[o + 14] = aoVivo ? 1 : 0;
+    dados[o + 15] = gAg.Kp;
+    dados[o + 16] = gAg.Ki;
+    dados[o + 17] = gAg.Kd;
   }
 
   function limpar() {
@@ -144,6 +154,10 @@ export function gerarCsv(hist, data = new Date()) {
     campos[11] = ganho(hist.valor(i, 11));
     campos[12] = ganho(hist.valor(i, 12));
     campos[13] = ganho(hist.valor(i, 13));
+    campos[COL_CONTROLADOR_AG] = hist.valor(i, COL_CONTROLADOR_AG) === 1 ? 'AG ao vivo' : 'AG do PI';
+    campos[15] = ganho(hist.valor(i, 15));
+    campos[16] = ganho(hist.valor(i, 16));
+    campos[17] = ganho(hist.valor(i, 17));
     linhas[i + 2] = campos.join(SEP);
   }
   return linhas.join(FIM) + FIM;
