@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Gêmeo digital da malha de nível do Tanque T2: PID por IMC e PID sintonizado por algoritmo genético, lado a lado, no navegador.">
+  <title>Gêmeo Digital da Planta Multiprocesso</title>
+  <link rel="stylesheet" href="assets/vendor/uplot/uPlot.min.css">
+  <link rel="stylesheet" href="assets/css/estilo.css">
+</head>
+<body>
+  <header class="cabecalho">
+    <div class="topo">
+      <h1>Gêmeo Digital da Planta Multiprocesso</h1>
+      <button type="button" id="btn-apresentacao" class="btn-apresentacao" aria-pressed="false">Modo apresentação</button>
+    </div>
+    <p class="subtitulo so-normal">Malha de nível do Tanque T2: PID por IMC e PID sintonizado por algoritmo genético, com a mesma entrada.</p>
+    <p class="credito so-normal">Modelo e dados: Projeto Integrador do 8º semestre (SENAI), equipe de 6 integrantes: Murilo Lameira, Murilo Romualdo, Guilherme Freitas, Henry Matheus, Leonardo Apolonio e Matheus Soares, com orientação do Me. Thiago Tadeu Amici.</p>
+  </header>
+
+  <nav class="abas so-normal" aria-label="Seções da página">
+    <div role="tablist" id="abas" class="lista-abas">
+      <button type="button" role="tab" id="aba-sim" aria-controls="painel-sim" aria-selected="true">Simulação</button>
+      <button type="button" role="tab" id="aba-dados" aria-controls="painel-dados" aria-selected="false" tabindex="-1">Dados reais</button>
+    </div>
+  </nav>
+
+  <p id="status" class="status" role="status">Carregando a simulação. Se esta mensagem não sumir, abra a página por um servidor local (por exemplo, <code>python -m http.server 8010</code>).</p>
+
+  <main>
+    <section id="roteiro" class="cartao roteiro so-apresentacao" aria-labelledby="titulo-roteiro">
+      <h2 id="titulo-roteiro" class="visualmente-oculto">Roteiro da apresentação</h2>
+      <div class="roteiro-passos">
+        <button type="button" id="passo-1" class="passo">1. Degrau</button>
+        <button type="button" id="passo-2" class="passo">2. Perturbação</button>
+        <button type="button" id="passo-3" class="passo" disabled>3. AG ao vivo (em breve)</button>
+      </div>
+      <p id="roteiro-legenda" class="roteiro-legenda" role="status" aria-live="polite">Escolha um passo do roteiro.</p>
+      <div class="roteiro-barra">
+        <div class="grupo-botoes">
+          <button type="button" id="btn-pausa-apresentacao" data-pausa>Pausar</button>
+          <button type="button" id="btn-reiniciar-apresentacao">Reiniciar</button>
+          <button type="button" id="btn-apresentacao-sair">Sair</button>
+        </div>
+        <p class="relogio">Tempo simulado: <span id="tempo-apresentacao">0 s</span></p>
+        <p class="atalhos" aria-hidden="true">Atalhos: 1, 2 e 3 para os passos, espaço pausa, R reinicia, Esc sai.</p>
+      </div>
+      <p id="roteiro-aviso" class="aviso" role="status" hidden></p>
+    </section>
+
+    <div id="painel-sim" role="tabpanel" aria-labelledby="aba-sim" class="grade">
+      <div class="coluna lateral">
+        <section class="cartao area-controles" aria-labelledby="titulo-controles">
+          <h2 id="titulo-controles">Controles</h2>
+
+          <div class="campo">
+            <label for="setpoint">Setpoint de nível</label>
+            <output id="setpoint-valor" class="valor-grande" for="setpoint">50%</output>
+            <input id="setpoint" type="range" min="0" max="100" step="1" value="50">
+            <p id="aviso-faixa" class="aviso" role="status" hidden>Fora da faixa linear do modelo (15% a 75%). A planta real pode responder diferente.</p>
+          </div>
+
+          <fieldset class="campo">
+            <legend>Velocidade da simulação</legend>
+            <div class="grupo-botoes" id="velocidades">
+              <button type="button" data-velocidade="1" aria-pressed="false">1x</button>
+              <button type="button" data-velocidade="10" aria-pressed="true">10x</button>
+              <button type="button" data-velocidade="50" aria-pressed="false">50x</button>
+              <button type="button" data-velocidade="100" aria-pressed="false">100x</button>
+            </div>
+          </fieldset>
+
+          <div class="grupo-botoes acoes">
+            <button type="button" id="btn-pausa" class="principal" data-pausa>Pausar</button>
+            <button type="button" id="btn-reiniciar">Reiniciar</button>
+          </div>
+
+          <div class="grupo-botoes acoes">
+            <button type="button" id="btn-exportar" aria-describedby="exportar-nota">Exportar CSV</button>
+          </div>
+          <p id="exportar-nota" class="nota">Histórico desde o último reinício (até 4 horas simuladas), com ponto e vírgula e vírgula decimal para o Excel.</p>
+          <p id="exportar-status" class="nota destaque-nota" role="status" aria-live="polite"></p>
+
+          <p class="relogio">Tempo simulado: <span id="tempo">0 s</span> <span class="fps" id="fps"></span></p>
+        </section>
+
+        <section class="cartao area-perturbacoes" aria-labelledby="titulo-perturbacoes">
+          <h2 id="titulo-perturbacoes">Perturbações</h2>
+          <p class="nota">Valem para as duas malhas ao mesmo tempo e não zeram as métricas.</p>
+
+          <div class="campo">
+            <label for="carga">Carga na vazão de saída</label>
+            <output id="carga-valor" class="valor-grande" for="carga">0%</output>
+            <input id="carga" type="range" min="-20" max="20" step="1" value="0" aria-describedby="carga-nota">
+            <div class="grupo-botoes">
+              <button type="button" id="btn-carga" class="principal">Aplicar degrau de carga</button>
+              <button type="button" id="btn-carga-zerar">Remover carga</button>
+            </div>
+            <p id="carga-aplicada" class="nota destaque-nota" role="status">Carga aplicada: 0%.</p>
+            <p id="carga-nota" class="nota">Valor positivo aumenta a perda na saída e esvazia o tanque; o controlador compensa atuando na válvula FV-02. Valor negativo enche o tanque.</p>
+          </div>
+
+          <div class="campo">
+            <label class="interruptor" for="ruido">
+              <input id="ruido" type="checkbox" role="switch" aria-describedby="ruido-nota">
+              <span>Ruído de medição</span>
+            </label>
+            <p id="ruido-nota" class="nota">Gaussiano com desvio de <span id="sigma">0,28</span>% (resíduo do modelo no bloco 40). O controlador e o gráfico de nível recebem a medição com ruído; as métricas e o tanque usam o nível real, sem ruído.</p>
+          </div>
+
+          <div class="campo">
+            <label for="theta">Tempo morto θ</label>
+            <output id="theta-valor" class="valor-grande" for="theta">0 s</output>
+            <input id="theta" type="range" min="0" max="60" step="1" value="0" aria-describedby="theta-nota">
+            <p id="theta-nota" class="nota">O modelo identificou θ = 0 s, mas a planta real tem algum atraso. Aumente θ para ver o limite do AG: por ser mais agressivo, ele passa do setpoint e oscila antes do IMC.</p>
+          </div>
+        </section>
+
+        <section class="cartao area-manual" aria-labelledby="titulo-manual">
+          <h2 id="titulo-manual">Modo manual</h2>
+          <label class="interruptor" for="manual">
+            <input id="manual" type="checkbox" role="switch" aria-describedby="manual-nota">
+            <span>Modo manual</span>
+          </label>
+          <p id="manual-nota" class="nota">A malha azul deixa de ser IMC e passa a usar os seus ganhos. Tente bater o AG no ITAE.</p>
+
+          <div id="manual-controles" hidden>
+            <div class="campo">
+              <label for="kp">Kp</label>
+              <output id="kp-valor" class="valor-ganho" for="kp"></output>
+              <input id="kp" type="range" min="0" max="1000" step="1" data-ganho="Kp">
+            </div>
+            <div class="campo">
+              <label for="ki">Ki <span class="unidade">(1/s)</span></label>
+              <output id="ki-valor" class="valor-ganho" for="ki"></output>
+              <input id="ki" type="range" min="0" max="1000" step="1" data-ganho="Ki">
+            </div>
+            <div class="campo">
+              <label for="kd">Kd <span class="unidade">(s)</span></label>
+              <output id="kd-valor" class="valor-ganho" for="kd"></output>
+              <input id="kd" type="range" min="0" max="1000" step="1" data-ganho="Kd">
+            </div>
+            <p class="nota">Escala logarítmica em Kp (0,01 a 5) e Ki (0,00001 a 0,05); Kd de 0 a 20 com mais resolução perto de zero. A troca de ganhos é sem salto no comando.</p>
+            <div class="grupo-botoes acoes">
+              <button type="button" id="btn-ganhos-imc">Voltar aos ganhos do IMC</button>
+            </div>
+
+            <table class="metricas duelo">
+              <caption class="nota">ITAE no degrau atual (%·s²)</caption>
+              <thead>
+                <tr><th scope="col" class="col-imc">Manual</th><th scope="col" class="col-ag">AG</th></tr>
+              </thead>
+              <tbody>
+                <tr><td id="duelo-manual">aguardando</td><td id="duelo-ag">aguardando</td></tr>
+              </tbody>
+            </table>
+            <p id="duelo-msg" class="duelo-msg" role="status" aria-live="polite"></p>
+          </div>
+        </section>
+      </div>
+
+      <div class="coluna principal">
+        <section class="cartao area-tanque" aria-labelledby="titulo-tanque">
+          <h2 id="titulo-tanque">Tanque T2</h2>
+          <div class="tanques">
+            <figure class="tanque imc">
+              <figcaption><span class="nome-malha1">IMC</span></figcaption>
+              <div id="tanque-IMC" class="tanque-desenho"></div>
+              <dl class="leituras">
+                <div><dt>Nível</dt><dd id="tq-IMC-y">aguardando</dd></div>
+                <div><dt>Válvula FV-02</dt><dd id="tq-IMC-u">aguardando</dd></div>
+                <div><dt>Saída</dt><dd id="tq-IMC-q">aguardando</dd></div>
+              </dl>
+            </figure>
+            <figure class="tanque ag">
+              <figcaption>AG</figcaption>
+              <div id="tanque-AG" class="tanque-desenho"></div>
+              <dl class="leituras">
+                <div><dt>Nível</dt><dd id="tq-AG-y">aguardando</dd></div>
+                <div><dt>Válvula FV-02</dt><dd id="tq-AG-u">aguardando</dd></div>
+                <div><dt>Saída</dt><dd id="tq-AG-q">aguardando</dd></div>
+              </dl>
+            </figure>
+          </div>
+          <dl class="glossario-termos glossario-compacto so-normal">
+            <div>
+              <dt class="col-imc">IMC (Controle por Modelo Interno)</dt>
+              <dd>Sintonia analítica clássica baseada no modelo da planta (τ<sub>mf</sub> = τ/3): cancela o polo dominante e prioriza suavidade e robustez, sem sobressinal.</dd>
+            </div>
+            <div>
+              <dt class="col-ag">AG (Algoritmo Genético)</dt>
+              <dd>Sintonia por otimização evolutiva (com refinamento local Nelder-Mead) que testa populações de ganhos PID para minimizar o erro ITAE respeitando o limite de 5% de sobressinal.</dd>
+            </div>
+          </dl>
+          <p class="nota so-normal">Linha tracejada: setpoint. Barra fina ao lado do tanque: faixa linear do modelo (15% a 75%). A bomba alimenta o tanque em ~30% e a válvula proporcional FV-02 na saída do tanque controla a vazão; o escoamento varia com o nível e com a carga. Valores em % de comando da FV-02.</p>
+        </section>
+
+        <section class="cartao area-graficos" aria-labelledby="titulo-graficos">
+          <h2 id="titulo-graficos">Resposta no tempo</h2>
+          <h3 class="titulo-grafico">Nível medido (%)</h3>
+          <div id="grafico-nivel" class="grafico"></div>
+          <h3 class="titulo-grafico so-normal">Comando da válvula FV-02 (%)</h3>
+          <div id="grafico-comando" class="grafico so-normal"></div>
+        </section>
+
+        <section class="cartao area-metricas" aria-labelledby="titulo-metricas">
+          <h2 id="titulo-metricas">Métricas ao vivo</h2>
+          <p class="nota so-normal">Zeram a cada mudança de setpoint e valem para o degrau a partir dali. Usam o nível real, sem ruído.</p>
+          <div class="tabela-rolagem">
+            <table class="metricas">
+              <thead>
+                <tr><th scope="col">Índice</th><th scope="col" class="col-imc nome-malha1">IMC</th><th scope="col" class="col-ag">AG</th></tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">Nível atual</th><td id="atual-IMC-y">aguardando</td><td id="atual-AG-y">aguardando</td></tr>
+                <tr><th scope="row">Comando atual</th><td id="atual-IMC-u">aguardando</td><td id="atual-AG-u">aguardando</td></tr>
+                <tr><th scope="row">IAE <span class="unidade">(%·s)</span></th><td id="m-IMC-IAE">aguardando</td><td id="m-AG-IAE">aguardando</td></tr>
+                <tr><th scope="row">ITAE <span class="unidade">(%·s²)</span></th><td id="m-IMC-ITAE">aguardando</td><td id="m-AG-ITAE">aguardando</td></tr>
+                <tr><th scope="row">ISE <span class="unidade">(%²·s)</span></th><td id="m-IMC-ISE">aguardando</td><td id="m-AG-ISE">aguardando</td></tr>
+                <tr><th scope="row">Sobressinal</th><td id="m-IMC-sobressinal">aguardando</td><td id="m-AG-sobressinal">aguardando</td></tr>
+                <tr><th scope="row">Tempo de subida <span class="unidade">(10% a 90%)</span></th><td id="m-IMC-tempoSubida">aguardando</td><td id="m-AG-tempoSubida">aguardando</td></tr>
+                <tr><th scope="row">Tempo de acomodação <span class="unidade">(±2%)</span></th><td id="m-IMC-tempoAcomodacao">aguardando</td><td id="m-AG-tempoAcomodacao">aguardando</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <dl class="glossario-termos so-normal" aria-label="Descrição das siglas e métricas">
+            <div>
+              <dt>ITAE <span class="unidade">(Integral do Erro Absoluto Ponderado pelo Tempo)</span></dt>
+              <dd>Soma o erro multiplicado pelo tempo decorrido (∫ t·|e(t)| dt). Penaliza com força erros que demoram a sumir; é o índice minimizado pelo AG (quanto menor, melhor).</dd>
+            </div>
+            <div>
+              <dt>IAE <span class="unidade">(Integral do Erro Absoluto)</span></dt>
+              <dd>Soma a área total do desvio de nível (∫ |e(t)| dt) até acomodar, tratando erros no início e no fim com o mesmo peso (quanto menor, melhor).</dd>
+            </div>
+            <div>
+              <dt>ISE <span class="unidade">(Integral do Erro Quadrático)</span></dt>
+              <dd>Soma o quadrado do erro (∫ e(t)² dt), penalizando desvios grandes logo após a mudança de setpoint (quanto menor, melhor).</dd>
+            </div>
+            <div>
+              <dt>R² <span class="unidade">(Coeficiente de Determinação, 99,96% na aba Dados reais)</span></dt>
+              <dd>Mede de 0% a 100% o quanto a curva do modelo FOPDT explica a variação real medida na bancada. Próximo de 100% indica ajuste quase exato aos dados experimentais.</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section id="secao-ag" class="cartao area-ag" aria-labelledby="titulo-ag">
+          <h2 id="titulo-ag">Sintonia por AG ao vivo</h2>
+          <p class="nota">O algoritmo genético é o mesmo do Projeto Integrador (população inicial, torneio, cruzamento, mutação e penalidade de sobressinal acima de 5%). O refinamento local (Nelder-Mead) foi acrescentado no gêmeo para garantir a convergência com qualquer semente. O sorteio não é o do NumPy, então os ganhos não repetem exatamente os do PI.</p>
+
+          <div class="ag-opcoes so-normal">
+            <div class="campo">
+              <label for="ag-limite-kp">Limite de Kp na busca</label>
+              <select id="ag-limite-kp" aria-describedby="ag-limite-nota">
+                <option value="1.5" selected>1,5 (como no PI)</option>
+                <option value="3">3,0</option>
+              </select>
+              <p id="ag-limite-nota" class="nota">O PI limitou Kp em 1,5, e o AG terminou colado nesse teto. Com 3,0 ele encontra ganhos mais agressivos, que sofrem mais com o tempo morto.</p>
+            </div>
+            <div class="campo">
+              <label class="interruptor" for="ag-semente-fixa">
+                <input id="ag-semente-fixa" type="checkbox" role="switch">
+                <span>Fixar a semente em 42 (a do PI)</span>
+              </label>
+              <p class="nota">Desligado, cada execução sorteia uma semente nova. População de 120, 150 gerações e refinamento local ligado.</p>
+            </div>
+          </div>
+
+          <div class="grupo-botoes acoes">
+            <button type="button" id="btn-ag-sintonizar" class="principal">Sintonizar</button>
+            <button type="button" id="btn-ag-parar" disabled>Parar</button>
+            <button type="button" id="btn-ag-pular" class="so-normal" disabled>Pular animação</button>
+          </div>
+          <p id="ag-status" class="destaque-nota ag-status" role="status" aria-live="polite">Clique em Sintonizar para rodar o AG aqui no navegador.</p>
+
+          <dl class="ag-leituras">
+            <div><dt>Geração</dt><dd id="ag-geracao">aguardando</dd></div>
+            <div><dt>Semente</dt><dd id="ag-semente">aguardando</dd></div>
+            <div><dt>Melhor aptidão</dt><dd id="ag-custo">aguardando</dd></div>
+            <div><dt>Kp</dt><dd id="ag-kp">aguardando</dd></div>
+            <div><dt>Ki</dt><dd id="ag-ki">aguardando</dd></div>
+            <div><dt>Kd</dt><dd id="ag-kd">aguardando</dd></div>
+            <div><dt>Ti = Kp/Ki</dt><dd id="ag-ti">aguardando</dd></div>
+          </dl>
+
+          <div class="ag-graficos">
+            <div>
+              <h3 class="titulo-grafico">Melhor aptidão por geração (escala logarítmica)</h3>
+              <div id="grafico-ag-custo" class="grafico"></div>
+            </div>
+            <div>
+              <h3 class="titulo-grafico">Ganhos do melhor indivíduo (% da faixa de busca)</h3>
+              <div id="grafico-ag-ganhos" class="grafico"></div>
+            </div>
+          </div>
+          <p class="nota so-normal">A aptidão é a do script do PI: ITAE simulado com dt = 1 s mais a penalidade de sobressinal. O ITAE da tabela usa dt = 0,5 s e sai no resultado.</p>
+          <p id="ag-tempo-worker" class="nota" role="status"></p>
+
+          <div id="ag-refino" class="ag-etapa" hidden>
+            <h3>Refinamento local (Nelder-Mead)</h3>
+            <progress id="ag-refino-barra" max="1" value="0" aria-label="Progresso da exibição do refinamento"></progress>
+            <p id="ag-refino-texto"></p>
+          </div>
+
+          <div id="ag-final" class="ag-etapa" hidden>
+            <h3>Resultado (modo oráculo, dt 0,5 s, 1200 s)</h3>
+            <div class="tabela-rolagem">
+              <table class="metricas ag-tabela">
+                <thead>
+                  <tr><th scope="col">Índice</th><th scope="col" class="col-ag">Este AG</th><th scope="col">AG do PI</th><th scope="col" class="col-imc">IMC</th></tr>
+                </thead>
+                <tbody id="ag-final-tabela"></tbody>
+              </table>
+            </div>
+            <p id="ag-criterio" class="duelo-msg" role="status"></p>
+          </div>
+
+          <div class="grupo-botoes acoes">
+            <button type="button" id="btn-ag-aplicar" disabled>Aplicar à malha laranja</button>
+            <button type="button" id="btn-ag-voltar-pi">Voltar aos ganhos do PI</button>
+          </div>
+          <p id="ag-malha" class="nota destaque-nota" role="status"></p>
+          <p class="nota so-normal">Aplicar troca os ganhos sem salto no comando e faz um degrau novo de setpoint para 50%.</p>
+        </section>
+
+        <section id="secao-estabilidade" class="cartao area-estabilidade so-normal" aria-labelledby="titulo-estabilidade">
+          <h2 id="titulo-estabilidade">Estabilidade (análise linear)</h2>
+          <p class="nota">Equação característica 1 + C(s)G(s) = 0 com o θ atual (<span id="estab-theta">0 s</span>). Com θ > 0, polos e Routh usam a aproximação de Padé de 1ª ordem; as margens usam o atraso exato. Recalcula quando ganhos, θ ou filtro mudam.</p>
+          <label class="interruptor" for="estab-filtro">
+            <input id="estab-filtro" type="checkbox" role="switch" checked>
+            <span>Filtro derivativo (N = 10), como na simulação</span>
+          </label>
+          <p id="estab-discordancia" class="aviso aviso-forte" role="status" hidden></p>
+          <ul id="estab-avisos" class="estab-avisos nota"></ul>
+          <div id="estab-malhas" class="estab-malhas"></div>
+          <figure class="plano-s">
+            <svg id="estab-plano" viewBox="0 0 360 210" role="img" aria-labelledby="estab-legenda-plano"></svg>
+            <figcaption id="estab-legenda-plano" class="nota"></figcaption>
+          </figure>
+        </section>
+      </div>
+    </div>
+
+    <div id="painel-dados" role="tabpanel" aria-labelledby="aba-dados" class="grade-dados so-normal" hidden>
+      <section class="cartao" aria-labelledby="titulo-dados">
+        <h2 id="titulo-dados">Dados reais: degrau do bloco 40</h2>
+        <p class="credito">Degrau do bloco 40 medido pela equipe do Projeto Integrador na Planta de Instrumentação Multiprocesso do SENAI.</p>
+        <p class="nota">Pontos: nível medido na planta. Linha: resposta do modelo FOPDT identificado, com os tempos reais do registro. O degrau na válvula FV-02 (com a bomba em ~30%) acontece em t = 0.</p>
+        <p id="dados-status" class="status-dados" role="status">Abra esta aba para carregar os dados.</p>
+        <div id="grafico-dados" class="grafico"></div>
+      </section>
+      <section class="cartao" aria-labelledby="titulo-ajuste">
+        <h2 id="titulo-ajuste">Ajuste do modelo</h2>
+        <div class="tabela-rolagem">
+          <table class="metricas ajuste">
+            <tbody id="tabela-ajuste"></tbody>
+          </table>
+        </div>
+        <dl class="glossario-termos">
+          <div>
+            <dt>R² <span class="unidade">(Coeficiente de Determinação)</span></dt>
+            <dd>Indica de 0% a 100% a aderência do modelo matemático aos 4.435 pontos medidos no degrau real (100% representa ajuste perfeito).</dd>
+          </div>
+          <div>
+            <dt>RMSE <span class="unidade">(Raiz do Erro Quadrático Médio)</span></dt>
+            <dd>Erro médio típico entre o nível medido pelo sensor e o calculado pelo modelo, na mesma unidade do nível (%).</dd>
+          </div>
+          <div>
+            <dt>FOPDT <span class="unidade">(Primeira Ordem com Tempo Morto)</span></dt>
+            <dd>Modelo dinâmico G(s) = K·e<sup>-θs</sup> / (τs + 1), definido pelo ganho estático K, constante de tempo τ (tempo para atingir 63,2% da variação final) e atraso de transporte θ.</dd>
+          </div>
+        </dl>
+        <p class="nota">O modelo é linear em torno do ponto de operação, válido para nível de 15% a 75%.</p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="rodape">
+    <p class="credito-curto so-apresentacao">Modelo e dados: Projeto Integrador do 8º semestre (SENAI). Equipe: Murilo Lameira, Murilo Romualdo, Guilherme Freitas, Henry Matheus, Leonardo Apolonio e Matheus Soares. Orientação: Me. Thiago Tadeu Amici.</p>
+    <p class="so-normal">Gêmeo digital interativo construído sobre o modelo FOPDT identificado pela equipe do Projeto Integrador. Gráficos com <a href="https://github.com/leeoniya/uPlot">uPlot</a> (licença MIT), servido localmente.</p>
+  </footer>
+
+  <script src="assets/vendor/uplot/uPlot.iife.min.js"></script>
+  <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>

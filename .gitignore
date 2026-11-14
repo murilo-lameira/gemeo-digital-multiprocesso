@@ -1,0 +1,16 @@
+# Dados brutos da equipe do PI: só publicar com autorização da equipe e do orientador
+dados/experimento2.csv
+
+# Arquivos de trabalho locais (citam caminhos da máquina; ficam fora do repositório)
+CLAUDE.md
+AGENTS.md
+MEMORY.md
+PROXIMOS-PASSOS-GEMINI.md
+.claude/
+Gemeo-Digital-Obsidian/
+
+# Gerados
+__pycache__/
+*.pyc
+node_modules/
+graphify-out/

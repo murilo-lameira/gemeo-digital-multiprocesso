@@ -1,0 +1,7 @@
+{
+  "data": "2026-11-14",
+  "Kp": 1.4993530562252095,
+  "Ki": 0.0034749546960881382,
+  "Kd": 0.002968160818873599,
+  "origem": "projeto_pid_comparativo.otimizar_pid_genetico(K, tau), seed 42, 60 x 80"
+}
