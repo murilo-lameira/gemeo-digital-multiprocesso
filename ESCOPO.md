@@ -29,7 +29,7 @@ Simulação interativa no navegador da malha de nível do Tanque T2 da Planta de
 | PID por AG (ITAE) | $K_p = 1{,}4994$, $K_i = 0{,}003475$ s⁻¹, $K_d = 0{,}0030$ s | idem |
 | Simulação de referência | degrau de setpoint de 0 para 50%, com anti-reset windup | `scripts/projeto_pid_comparativo.py` |
 
-Nota: no CSV, `DegrauP` só assume valores inteiros (0, 10, 20, 30, 40 e 50%) e `DegrauHz` acompanha uma a duas amostras depois, com Hz = 0,585 × DegrauP. As duas colunas são da Bomba 2, como diz `docs/01_ETAPAS_01_A_06_IDENTIFICACAO.md`. Com o degrau real de 10%, o ganho por unidade seria K ≈ 5,99 %/%; o produto K × $\Delta U$ e o R² não mudam. Em discussão com a equipe e o orientador; o gêmeo mantém os valores do PI.
+Nota: no CSV, a partir das 19h58 de 01/10 (sequência que inclui o bloco 40), `DegrauP` sobe em passos de 10% (10, 20, 30, 40 e 50%) e `DegrauHz` acompanha uma a duas amostras depois, com Hz = 0,585 × DegrauP. Antes disso, `DegrauP` registra 3, 5, 8 e 11% com frequências que não seguem essa relação. As duas colunas são da Bomba 2, como diz `docs/01_ETAPAS_01_A_06_IDENTIFICACAO.md`. Com o degrau real de 10%, o ganho por unidade seria K ≈ 5,99 %/%; o produto K × $\Delta U$ e o R² não mudam. Em discussão com a equipe e o orientador; o gêmeo mantém os valores do PI.
 
 Métricas que a simulação nova precisa reproduzir (tolerância de 1%, modo oráculo, $dt$ = 0,5 s, 1200 s):
 
