@@ -23,13 +23,13 @@ Simulação interativa no navegador da malha de nível do Tanque T2 da Planta de
 | Ganho $K$ | $7{,}7909$ %/% (ajuste do AG). A razão direta do degrau dá $7{,}7916$ %/% e $11{,}1948$ %/Hz | idem |
 | Constante de tempo $\tau$ | $431{,}52$ s | idem |
 | Tempo morto $\theta$ | $0$ s | idem |
-| Degrau de identificação | Bomba mantida em ~30% (~18 Hz) e variação na válvula proporcional FV-02 (`DegrauP` de 32,3% para 40,0%): $\Delta U$ = 7,692% (5,354 Hz eq.). Nível de 15,71% para 75,65% | `scripts/identificacao_fopdt.py` |
-| Atuador | válvula proporcional FV-02 na saída do tanque (0 a 100% de comando) com bomba alimentando em ~30% | Bancada VTB SENAI e `docs/02_ETAPAS_07_A_10_SINTONIA_PID.md` |
+| Degrau de identificação | Degrau na Bomba 2 (`DegrauP` de 30% para 40%, `DegrauHz` de 17,6 Hz para 23,4 Hz), com a válvula FV-02 fixa. O script calcula $\Delta U$ = 7,692% (5,354 Hz) porque a média antes do degrau pega 3 amostras já em 40%. Nível de 15,71% para 75,65% | `scripts/identificacao_fopdt.py` |
+| Atuador | Bomba 2 por inversor (0 a 100% de comando, Hz = 0,585 × DegrauP) alimentando o tanque; válvula FV-02 na saída em abertura fixa | Bancada VTB SENAI e `docs/02_ETAPAS_07_A_10_SINTONIA_PID.md` |
 | PI por IMC | $K_p = 0{,}3851$, $K_i = 0{,}000892$ s⁻¹, $K_d = 0$ ($\tau_{mf} = \tau/3$) | idem |
 | PID por AG (ITAE) | $K_p = 1{,}4994$, $K_i = 0{,}003475$ s⁻¹, $K_d = 0{,}0030$ s | idem |
 | Simulação de referência | degrau de setpoint de 0 para 50%, com anti-reset windup | `scripts/projeto_pid_comparativo.py` |
 
-Nota: na operação real da bancada pela equipe, a bomba permaneceu fixa em ~30% (~18 Hz) alimentando o tanque e os degraus foram aplicados variando o comando da válvula proporcional FV-02 na saída do tanque em `DegrauP` (de 32,3% para 40,0%). Confirmar com a equipe antes da banca o mapeamento exato da coluna `DegrauHz` (18,05 Hz para 23,4 Hz) registrada no supervisório.
+Nota: no CSV, `DegrauP` só assume valores inteiros (0, 10, 20, 30, 40 e 50%) e `DegrauHz` acompanha uma a duas amostras depois, com Hz = 0,585 × DegrauP. As duas colunas são da Bomba 2, como diz `docs/01_ETAPAS_01_A_06_IDENTIFICACAO.md`. Com o degrau real de 10%, o ganho por unidade seria K ≈ 5,99 %/%; o produto K × $\Delta U$ e o R² não mudam. Em discussão com a equipe e o orientador; o gêmeo mantém os valores do PI.
 
 Métricas que a simulação nova precisa reproduzir (tolerância de 1%, modo oráculo, $dt$ = 0,5 s, 1200 s):
 
@@ -42,7 +42,7 @@ Métricas que a simulação nova precisa reproduzir (tolerância de 1%, modo or�
 | Tempo de subida | 315,5 s | 80,5 s |
 | Tempo de acomodação (±2%) | 561,5 s | 143,5 s |
 
-Colunas do CSV: `codepk`, `Data_Hora`, `Nível` (0 a 100%), `DegrauHz` (escala em Hz registrada no supervisório), `DegrauP` (0 a 100% de comando da válvula proporcional FV-02 na saída do tanque). O degrau usado na identificação é o bloco 40: `iloc[10620:15055]`, degrau no índice 12, recorte com `t_norm >= -10` (na prática começa em -6 s, 4.435 pontos com os tempos reais de `Data_Hora`).
+Colunas do CSV: `codepk`, `Data_Hora`, `Nível` (0 a 100%), `DegrauHz` (escala em Hz registrada no supervisório), `DegrauP` (0 a 100% de comando da Bomba 2). O degrau usado na identificação é o bloco 40: `iloc[10620:15055]`, degrau no índice 12, recorte com `t_norm >= -10` (na prática começa em -6 s, 4.435 pontos com os tempos reais de `Data_Hora`).
 
 ### 2.1 Modos de simulação
 
@@ -60,7 +60,7 @@ Colunas do CSV: `codepk`, `Data_Hora`, `Nível` (0 a 100%), `DegrauHz` (escala e
 ## 4. Funcionalidades
 
 ### Fase 1: MVP (até 27/11)
-1. Tanque animado com nível, bomba em ~30% na entrada, válvula proporcional FV-02 na saída do tanque e setpoint, e gráfico de nível e comando da válvula ao lado.
+1. Tanque animado com nível, Bomba 2 comandada na entrada, válvula FV-02 fixa na saída e setpoint, e gráfico de nível e comando da bomba ao lado.
 2. Os dois controladores lado a lado na mesma tela (IMC e AG), com a mesma entrada.
 3. Controles: setpoint, velocidade da simulação (1x a 100x), pausar, reiniciar.
 4. Perturbações:

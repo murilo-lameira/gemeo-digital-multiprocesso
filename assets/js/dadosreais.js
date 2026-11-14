@@ -50,8 +50,8 @@ function linhasTabela(d, aj) {
     ['Ganho K', `${n(d.K, 4)} %/%`],
     ['Constante de tempo τ', `${n(d.tau, 2)} s`],
     ['Tempo morto θ', `${n(d.theta, 0)} s`],
-    ['Comando antes do degrau (FV-02)', `${n(d.u0_p, 1)}% (${n(d.u0_hz, 2)} Hz eq.)`],
-    ['Degrau na válvula FV-02', `${n(d.delta_u_p, 3)}% (${n(d.delta_u_hz, 3)} Hz eq.)`],
+    ['Comando da Bomba 2 antes do degrau', `${n(d.u0_p, 1)}% (${n(d.u0_hz, 2)} Hz eq.)`],
+    ['Degrau na Bomba 2', `${n(d.delta_u_p, 3)}% (${n(d.delta_u_hz, 3)} Hz eq.)`],
     ['Nível inicial e final', `${n(d.y0, 2)}% para ${n(d.yf, 2)}%`],
     ['Pontos medidos', n(d.t_norm.length, 0)],
   ];

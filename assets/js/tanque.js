@@ -1,7 +1,8 @@
 // tanque.js: Tanque T2 animado em SVG, um por controlador.
 // O SVG é criado uma vez; cada quadro só altera atributos.
-// Desenho esquemático: a bomba à esquerda alimenta o tanque pelo topo em ~30%,
-// e a válvula proporcional FV-02 na tubulação de saída à direita modula a vazão.
+// Desenho esquemático: a Bomba 2 à esquerda, comandada pelo controlador, alimenta
+// o tanque pelo topo. A válvula FV-02 na saída à direita fica numa abertura fixa,
+// como no degrau do bloco 40 (bomba de 30% para 40%).
 
 const NS = 'http://www.w3.org/2000/svg';
 
@@ -49,7 +50,7 @@ export function criarTanque(container, { classe }) {
   el('path', { d: `M${TQ_X + TQ_L} ${SAIDA_Y} H238`, class: 'tubo' }, svg);
   const fluxoSaida = el('path', { d: `M${TQ_X + TQ_L} ${SAIDA_Y} H238`, class: 'fluxo' }, svg);
 
-  // Válvula proporcional FV-02 na tubulação de saída à direita
+  // Válvula FV-02 na tubulação de saída à direita, em abertura fixa
   el('line', {
     x1: VALV_X,
     y1: VALV_Y,
@@ -65,11 +66,11 @@ export function criarTanque(container, { classe }) {
     d: `M${VALV_X - 8} ${VALV_Y - 7} V${VALV_Y + 7} L${VALV_X} ${VALV_Y} Z M${VALV_X + 8} ${VALV_Y - 7} V${VALV_Y + 7} L${VALV_X} ${VALV_Y} Z`,
     class: 'valvula-controle',
   }, svg);
-  const aberturaValv = el('rect', {
+  el('rect', {
     x: VALV_X - 4,
-    y: VALV_Y,
+    y: VALV_Y - 6,
     width: 8,
-    height: 0,
+    height: 12,
     rx: 1,
     class: 'valvula-abertura',
   }, svg);
@@ -78,7 +79,7 @@ export function criarTanque(container, { classe }) {
     y: VALV_Y + 18,
     class: 'valvula-texto',
   }, svg);
-  txValv.textContent = 'FV-02';
+  txValv.textContent = 'FV-02 fixa';
 
   // Corpo do tanque e nível
   el('rect', { x: TQ_X, y: TQ_Y, width: TQ_L, height: TQ_A, rx: 4, class: 'corpo' }, svg);
@@ -128,11 +129,9 @@ export function criarTanque(container, { classe }) {
   let deslocSaida = 0;
   let ultY = NaN;
   let ultSp = NaN;
-  let ultU = NaN;
 
-  // y, sp: nível real e setpoint (%); u: comando da válvula FV-02 (%); q: vazão
-  // de saída equivalente (% da bomba); dtReal: segundos reais desde o último quadro.
-  // A bomba alimenta o tanque pelo topo em ~30%, e a válvula proporcional FV-02 modula a saída à direita.
+  // y, sp: nível real e setpoint (%); u: comando da Bomba 2 (%); q: vazão
+  // de saída equivalente (% do comando da bomba); dtReal: segundos reais desde o último quadro.
   function atualizar(y, sp, u, q, dtReal) {
     const yc = y < 0 ? 0 : y > 100 ? 100 : y;
     // Negação de <= para que o NaN inicial também desenhe
@@ -149,20 +148,13 @@ export function criarTanque(container, { classe }) {
       linhaSp.setAttribute('y2', ys);
       spTexto.setAttribute('y', (Number(ys) - 3).toFixed(2));
     }
-    const uc = u < 0 ? 0 : u > 100 ? 100 : u;
-    if (!(Math.abs(uc - ultU) <= 0.1)) {
-      ultU = uc;
-      const hValv = (12 * (uc / 100)).toFixed(2);
-      aberturaValv.setAttribute('y', (VALV_Y - hValv / 2).toFixed(2));
-      aberturaValv.setAttribute('height', hValv);
-    }
     if (movimentoReduzido.matches || dtReal <= 0) return;
-    // Rotor da bomba: rotação constante de referência de ~30%
-    const rotBomba = u > 0.01 ? 30 : 0;
-    angulo = (angulo + rotBomba * 7.2 * dtReal) % 360;
+    // Rotor da bomba: rotação proporcional ao comando
+    const uc = u < 0 ? 0 : u > 100 ? 100 : u;
+    angulo = (angulo + uc * 7.2 * dtReal) % 360;
     rotor.setAttribute('transform', `rotate(${angulo.toFixed(1)} ${BOMBA_X} ${BOMBA_Y})`);
-    // Tracejado andando na tubulação: bomba alimenta constante, saída proporcional a q
-    deslocEntrada = (deslocEntrada - rotBomba * 0.6 * dtReal) % 100;
+    // Tracejado andando na tubulação: entrada proporcional a u, saída proporcional a q
+    deslocEntrada = (deslocEntrada - uc * 0.6 * dtReal) % 100;
     deslocSaida = (deslocSaida - q * 0.6 * dtReal) % 100;
     fluxoEntrada.setAttribute('stroke-dashoffset', deslocEntrada.toFixed(1));
     fluxoSaida.setAttribute('stroke-dashoffset', deslocSaida.toFixed(1));

@@ -138,7 +138,7 @@ export function criarSistema({ dt = DT, setpoint = 50 } = {}) {
   return s;
 }
 
-// Vazão de saída equivalente, em % do comando da válvula FV-02. Do balanço do
+// Vazão de saída equivalente, em % do comando da Bomba 2. Do balanço do
 // modelo, tau*dy/dt = K*(u - u0 - d) - (y - y0): a saída equivale a
 // u0 + d + (y - y0)/K. Só para o indicador visual do tanque.
 export function vazaoSaida(y, d) {

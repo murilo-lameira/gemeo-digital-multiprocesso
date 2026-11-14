@@ -358,7 +358,7 @@ export function analisar(params) {
   const mg = margens(params);
   const avisos = [];
   if (theta > 0) avisos.push('Padé de 1ª ordem, aproximação');
-  avisos.push('A análise linear não considera a saturação da válvula FV-02');
+  avisos.push('A análise linear não considera a saturação da Bomba 2');
   if (filtro && Kp === 0 && Kd !== 0) {
     avisos.push('Com Kp = 0 o filtro Tf = Kd/(Kp N) não existe: o termo derivativo foi ignorado, como no pid.js');
   }

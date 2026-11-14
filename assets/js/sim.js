@@ -5,7 +5,8 @@
 import { criarPID } from './pid.js';
 
 // Ponto de operação do bloco 40 (dados/gerar_bloco40.py): u0 = média de
-// DegrauP antes do degrau (32,3077%), y0 = nível médio antes do degrau
+// DegrauP antes do degrau (32,3077%; a média do script pega 3 amostras
+// já em 40%, no CSV a bomba estava em 30%), y0 = nível médio antes do degrau
 // (15,7115%). K e tau do ajuste por AG no PI.
 export const PLANTA = { K: 7.7909, tau: 431.52, theta: 0, u0: 32.308, y0: 15.712 };
 

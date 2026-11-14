@@ -21,7 +21,7 @@ function legendas(y0) {
   const deY0 = formatarNumero(y0, 1);
   return [
     `Degrau de setpoint de ${deY0}% para 50%. Olhe o gráfico de nível: o AG (laranja) chega ao setpoint cerca de 4 vezes mais rápido que o IMC (azul), e nenhum dos dois passa do alvo.`,
-    'Carga de +10% na vazão de saída: o tanque começa a esvaziar. As duas malhas atuam na válvula FV-02 na saída e voltam ao setpoint; o AG desvia menos e se recupera antes.',
+    'Carga de +10% na vazão de saída: o tanque começa a esvaziar. As duas malhas aumentam o comando da Bomba 2 e voltam ao setpoint; o AG desvia menos e se recupera antes.',
     'O algoritmo genético busca os ganhos sozinho, aqui no navegador: a curva cai a cada geração. Um refinamento local fecha a busca e, no fim, os ganhos vão para a malha laranja com um novo degrau.',
   ];
 }

@@ -38,7 +38,7 @@ gemeo-digital-multiprocesso/
 │   │   ├── formato.js          # Formatadores numéricos pt-BR via Intl.NumberFormat em cache
 │   │   ├── app.js              # Estado da UI e laço em requestAnimationFrame (até 100x, 60 fps)
 │   │   ├── ui.js               # Controles, tabela de métricas, sliders (log/quadrático) e uPlot
-│   │   ├── tanque.js           # Tanque SVG animado com nível, setpoint, bomba (~30%) na entrada e válvula FV-02 na saída
+│   │   ├── tanque.js           # Tanque SVG animado com nível, setpoint, Bomba 2 comandada na entrada e válvula FV-02 fixa na saída
 │   │   ├── dadosreais.js       # Carregamento único de bloco40.json e gráfico da aba Dados reais
 │   │   ├── agaovivo.js         # Orquestração da seção AG ao vivo com fallback local para Worker
 │   │   ├── painelestabilidade.js# Painel de estabilidade e plano s em SVG com escala symlog
@@ -46,7 +46,7 @@ gemeo-digital-multiprocesso/
 │   └── vendor/
 │       └── uplot/              # Biblioteca uPlot 1.6.31 (JS, CSS e LICENSE MIT) para uso offline
 ├── dados/
-│   ├── bloco40.json            # Recorte experimental de 4.435 pontos (degrau na FV-02 de 32,3% para 40,0%)
+│   ├── bloco40.json            # Recorte experimental de 4.435 pontos (degrau na Bomba 2 de 30% para 40%)
 │   ├── gerar_bloco40.py        # Script de extração e ajuste R2 a partir do CSV experimental
 │   └── experimento2.csv        # Dados brutos da planta (fora do Git até autorização formal)
 ├── validacao/

@@ -98,7 +98,7 @@
               <button type="button" id="btn-carga-zerar">Remover carga</button>
             </div>
             <p id="carga-aplicada" class="nota destaque-nota" role="status">Carga aplicada: 0%.</p>
-            <p id="carga-nota" class="nota">Valor positivo aumenta a perda na saída e esvazia o tanque; o controlador compensa atuando na válvula FV-02. Valor negativo enche o tanque.</p>
+            <p id="carga-nota" class="nota">Valor positivo aumenta a perda na saída e esvazia o tanque; o controlador compensa aumentando o comando da Bomba 2. Valor negativo enche o tanque.</p>
           </div>
 
           <div class="campo">
@@ -169,7 +169,7 @@
               <div id="tanque-IMC" class="tanque-desenho"></div>
               <dl class="leituras">
                 <div><dt>Nível</dt><dd id="tq-IMC-y">aguardando</dd></div>
-                <div><dt>Válvula FV-02</dt><dd id="tq-IMC-u">aguardando</dd></div>
+                <div><dt>Bomba 2</dt><dd id="tq-IMC-u">aguardando</dd></div>
                 <div><dt>Saída</dt><dd id="tq-IMC-q">aguardando</dd></div>
               </dl>
             </figure>
@@ -178,7 +178,7 @@
               <div id="tanque-AG" class="tanque-desenho"></div>
               <dl class="leituras">
                 <div><dt>Nível</dt><dd id="tq-AG-y">aguardando</dd></div>
-                <div><dt>Válvula FV-02</dt><dd id="tq-AG-u">aguardando</dd></div>
+                <div><dt>Bomba 2</dt><dd id="tq-AG-u">aguardando</dd></div>
                 <div><dt>Saída</dt><dd id="tq-AG-q">aguardando</dd></div>
               </dl>
             </figure>
@@ -193,14 +193,14 @@
               <dd>Sintonia por otimização evolutiva (com refinamento local Nelder-Mead) que testa populações de ganhos PID para minimizar o erro ITAE respeitando o limite de 5% de sobressinal.</dd>
             </div>
           </dl>
-          <p class="nota so-normal">Linha tracejada: setpoint. Barra fina ao lado do tanque: faixa linear do modelo (15% a 75%). A bomba alimenta o tanque em ~30% e a válvula proporcional FV-02 na saída do tanque controla a vazão; o escoamento varia com o nível e com a carga. Valores em % de comando da FV-02.</p>
+          <p class="nota so-normal">Linha tracejada: setpoint. Barra fina ao lado do tanque: faixa linear do modelo (15% a 75%). O controlador comanda a Bomba 2, que alimenta o tanque pelo topo; a válvula FV-02 na saída fica numa abertura fixa e o escoamento varia com o nível e com a carga. Valores em % de comando da bomba.</p>
         </section>
 
         <section class="cartao area-graficos" aria-labelledby="titulo-graficos">
           <h2 id="titulo-graficos">Resposta no tempo</h2>
           <h3 class="titulo-grafico">Nível medido (%)</h3>
           <div id="grafico-nivel" class="grafico"></div>
-          <h3 class="titulo-grafico so-normal">Comando da válvula FV-02 (%)</h3>
+          <h3 class="titulo-grafico so-normal">Comando da Bomba 2 (%)</h3>
           <div id="grafico-comando" class="grafico so-normal"></div>
         </section>
 
@@ -345,7 +345,7 @@
       <section class="cartao" aria-labelledby="titulo-dados">
         <h2 id="titulo-dados">Dados reais: degrau do bloco 40</h2>
         <p class="credito">Degrau do bloco 40 medido pela equipe do Projeto Integrador na Planta de Instrumentação Multiprocesso do SENAI.</p>
-        <p class="nota">Pontos: nível medido na planta. Linha: resposta do modelo FOPDT identificado, com os tempos reais do registro. O degrau na válvula FV-02 (com a bomba em ~30%) acontece em t = 0.</p>
+        <p class="nota">Pontos: nível medido na planta. Linha: resposta do modelo FOPDT identificado, com os tempos reais do registro. O degrau na Bomba 2 (de 30% para 40%, com a válvula FV-02 fixa) acontece em t = 0.</p>
         <p id="dados-status" class="status-dados" role="status">Abra esta aba para carregar os dados.</p>
         <div id="grafico-dados" class="grafico"></div>
       </section>
